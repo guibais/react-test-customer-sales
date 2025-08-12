@@ -6,6 +6,7 @@ import { SaleForm } from '../components/forms/SaleForm'
 import { Button } from '../components/ui/button'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
+import type { NormalizedSale } from '../services/salesService'
 
 export const Route = createFileRoute('/sales')({
   component: SalesPage,
@@ -14,25 +15,25 @@ export const Route = createFileRoute('/sales')({
 function SalesPage() {
   const { isAuthenticated } = useAuth()
   const [showForm, setShowForm] = useState(false)
-  const [editingSaleId, setEditingSaleId] = useState<string | null>(null)
+  const [editingSaleData, setEditingSaleData] = useState<NormalizedSale | null>(null)
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />
   }
 
-  const handleEdit = (saleId: string) => {
-    setEditingSaleId(saleId)
+  const handleEdit = (saleData: NormalizedSale) => {
+    setEditingSaleData(saleData)
     setShowForm(true)
   }
 
   const handleCloseForm = () => {
     setShowForm(false)
-    setEditingSaleId(null)
+    setEditingSaleData(null)
   }
 
   const handleFormSuccess = () => {
     setShowForm(false)
-    setEditingSaleId(null)
+    setEditingSaleData(null)
   }
 
   return (
@@ -63,7 +64,8 @@ function SalesPage() {
         
         {showForm && (
           <SaleForm
-            saleId={editingSaleId || undefined}
+            saleId={editingSaleData?.id}
+            saleData={editingSaleData || undefined}
             onClose={handleCloseForm}
             onSuccess={handleFormSuccess}
           />

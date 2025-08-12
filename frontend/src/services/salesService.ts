@@ -4,6 +4,7 @@ export type NormalizedSale = {
   id: string;
   customerId: string;
   customerName: string;
+  customerEmail: string;
   amount: number;
   saleDate: string;
   createdAt: string;

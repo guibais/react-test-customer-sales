@@ -31,8 +31,13 @@ export type Customer = {
 };
 
 export type Sale = {
-  data: string;
-  valor: number;
+  id: string;
+  customerId: string;
+  customerName: string;
+  amount: number;
+  saleDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type CustomerApiResponse = {

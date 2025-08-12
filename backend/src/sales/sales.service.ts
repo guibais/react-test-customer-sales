@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateSaleDto, UpdateSaleDto, SaleFiltersDto } from '../dto/sale.dto';
@@ -26,6 +25,7 @@ export class SalesService {
           customer: {
             select: {
               name: true,
+              email: true,
             },
           },
         },
@@ -37,6 +37,7 @@ export class SalesService {
       sales: sales.map((sale) => ({
         ...sale,
         customerName: sale.customer.name,
+        customerEmail: sale.customer.email,
       })),
       pagination: {
         page,

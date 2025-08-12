@@ -12,7 +12,7 @@ import type { NormalizedSale } from "../../services/salesService";
 import { useState } from "react";
 
 type SalesTableProps = {
-  onEdit?: (saleId: string) => void;
+  onEdit?: (saleData: NormalizedSale) => void;
   onDelete?: (saleId: string) => void;
   showActions?: boolean;
 };
@@ -96,7 +96,7 @@ export function SalesTable({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEdit?.(sale.id)}
+                    onClick={() => onEdit?.(sale)}
                     className="text-sky-600 hover:text-sky-900 hover:bg-sky-50"
                   >
                     <Edit className="h-4 w-4" />

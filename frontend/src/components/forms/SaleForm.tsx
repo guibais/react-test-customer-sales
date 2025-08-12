@@ -11,21 +11,22 @@ import {
 } from "../ui/select";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Loader2 } from "lucide-react";
-import { useCreateSale, useUpdateSale, useSale } from "../../hooks/useSales";
+import { useCreateSale, useUpdateSale } from "../../hooks/useSales";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useState, useEffect } from "react";
 import { Modal } from "../ui/Modal";
+import type { NormalizedSale } from "../../services/salesService";
 
 type SaleFormProps = {
   saleId?: string;
+  saleData?: NormalizedSale;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export function SaleForm({ saleId, onClose, onSuccess }: SaleFormProps) {
+export function SaleForm({ saleId, saleData, onClose, onSuccess }: SaleFormProps) {
   const { mutate: createSale, isPending: isCreating } = useCreateSale();
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale();
-  const { data: saleData, isLoading: isLoadingSale } = useSale(saleId);
   const { data: customersData } = useCustomers();
   const [error, setError] = useState<string | null>(null);
 
@@ -78,21 +79,6 @@ export function SaleForm({ saleId, onClose, onSuccess }: SaleFormProps) {
     }
   }, [saleData, isEditing, form]);
 
-  if (isLoadingSale && isEditing) {
-    return (
-      <Modal 
-        isOpen={true} 
-        onClose={onClose} 
-        title="Carregando..."
-      >
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="h-6 w-6 animate-spin mr-2 text-sky-600" />
-          <span className="text-slate-600">Carregando dados da venda...</span>
-        </div>
-      </Modal>
-    );
-  }
-
   return (
     <Modal 
       isOpen={true} 
@@ -116,28 +102,36 @@ export function SaleForm({ saleId, onClose, onSuccess }: SaleFormProps) {
               name="customerId"
               validators={{
                 onChange: ({ value }) =>
-                  !value ? "Cliente é obrigatório" : undefined,
+                  !isEditing && !value ? "Cliente é obrigatório" : undefined,
               }}
             >
               {(field) => (
                 <div className="space-y-2">
                   <Label htmlFor={field.name}>Cliente</Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customersData?.customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name} - {customer.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors.length > 0 && (
+                  {isEditing ? (
+                    <Input
+                      value={saleData ? `${saleData.customerName} - ${saleData.customerEmail}` : "Carregando..."}
+                      disabled
+                      className="bg-gray-50 text-gray-600"
+                    />
+                  ) : (
+                    <Select
+                      value={field.state.value}
+                      onValueChange={field.handleChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customersData?.customers?.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name} - {customer.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {!isEditing && field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-600">
                       {field.state.meta.errors[0]}
                     </p>
