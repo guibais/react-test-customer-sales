@@ -27,12 +27,18 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  create(@Request() req: AuthRequest, @Body() createCustomerDto: CreateCustomerDto) {
+  create(
+    @Request() req: AuthRequest,
+    @Body() createCustomerDto: CreateCustomerDto,
+  ) {
     return this.customersService.create(req.user.id, createCustomerDto);
   }
 
   @Get()
-  async findAll(@Request() req: AuthRequest, @Query() filters: CustomerFiltersDto) {
+  async findAll(
+    @Request() req: AuthRequest,
+    @Query() filters: CustomerFiltersDto,
+  ) {
     const result = await this.customersService.findAll(req.user.id, filters);
 
     const transformedData = {

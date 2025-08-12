@@ -114,7 +114,7 @@ export class SalesService {
     });
   }
 
-  async remove(userId: string, id: string): Promise<void> {
+  async remove(userId: string, id: string): Promise<Sale> {
     const existingSale = await this.prisma.sale.findFirst({
       where: {
         id,
@@ -126,7 +126,7 @@ export class SalesService {
       throw new NotFoundException(`Sale with ID ${id} not found`);
     }
 
-    await this.prisma.sale.delete({
+    return await this.prisma.sale.delete({
       where: { id },
     });
   }

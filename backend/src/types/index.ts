@@ -44,6 +44,8 @@ export type AuthResponse = {
   user: Omit<User, 'password'>;
 };
 
+export * from './auth.types';
+
 export type DailySalesStats = {
   date: string;
   totalSales: number;

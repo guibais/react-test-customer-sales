@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import {
   CreateCustomerDto,
@@ -12,7 +16,10 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createCustomerDto: CreateCustomerDto): Promise<Customer> {
+  async create(
+    userId: string,
+    createCustomerDto: CreateCustomerDto,
+  ): Promise<Customer> {
     const data = {
       ...createCustomerDto,
       userId,
@@ -24,8 +31,13 @@ export class CustomersService {
     try {
       return await this.prisma.customer.create({ data });
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Este email já está sendo usado por outro cliente');
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Este email já está sendo usado por outro cliente',
+        );
       }
       throw error;
     }
@@ -105,8 +117,13 @@ export class CustomersService {
         data,
       });
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Este email já está sendo usado por outro cliente');
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Este email já está sendo usado por outro cliente',
+        );
       }
       throw error;
     }

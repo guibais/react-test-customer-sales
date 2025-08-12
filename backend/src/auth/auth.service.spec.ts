@@ -4,11 +4,10 @@ import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../database/prisma.service';
 import { RegisterDto, LoginDto } from '../dto/auth.dto';
+import * as bcrypt from 'bcrypt';
 
-const mockBcrypt = {
-  hash: jest.fn(),
-  compare: jest.fn(),
-};
+const mockBcryptHash = jest.spyOn(bcrypt, 'hash');
+const mockBcryptCompare = jest.spyOn(bcrypt, 'compare');
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -78,12 +77,13 @@ describe('AuthService', () => {
       const hashedPassword = 'hashedPassword123';
       const accessToken = 'jwt-token-123';
 
-      mockBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      mockBcryptHash.mockResolvedValue(hashedPassword as never);
       prismaService.user.create.mockResolvedValue(mockUser);
-      mockBcrypt.hash.mockResolvedValue('hashedPassword');
+      jwtService.sign.mockReturnValue(accessToken);
+
       const result = await service.register(registerDto);
 
-      expect(mockBcrypt.hash).toHaveBeenCalledWith('password123', 10);
+      expect(mockBcryptHash).toHaveBeenCalledWith(registerDto.password, 10);
       expect(prismaService.user.create).toHaveBeenCalledWith({
         data: {
           ...registerDto,
@@ -105,11 +105,11 @@ describe('AuthService', () => {
       const hashedPassword = 'hashedPassword123';
       const dbError = new Error('Database error');
 
-      mockBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      mockBcryptHash.mockResolvedValue(hashedPassword as never);
       prismaService.user.create.mockRejectedValue(dbError);
 
       await expect(service.register(registerDto)).rejects.toThrow(dbError);
-      expect(mockBcrypt.hash).toHaveBeenCalledWith(registerDto.password, 10);
+      expect(mockBcryptHash).toHaveBeenCalledWith(registerDto.password, 10);
       expect(prismaService.user.create).toHaveBeenCalledWith({
         data: {
           ...registerDto,
@@ -120,10 +120,10 @@ describe('AuthService', () => {
 
     it('should throw error when password hashing fails', async () => {
       const hashError = new Error('Hashing error');
-      mockBcrypt.hash.mockRejectedValue(hashError as never);
+      mockBcryptHash.mockRejectedValue(hashError as never);
 
       await expect(service.register(registerDto)).rejects.toThrow(hashError);
-      expect(mockBcrypt.hash).toHaveBeenCalledWith(registerDto.password, 10);
+      expect(mockBcryptHash).toHaveBeenCalledWith(registerDto.password, 10);
       expect(prismaService.user.create).not.toHaveBeenCalled();
     });
   });
@@ -189,13 +189,13 @@ describe('AuthService', () => {
 
     it('should return user when credentials are valid', async () => {
       prismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockBcrypt.compare.mockResolvedValue(true as never);
+      mockBcryptCompare.mockResolvedValue(true as never);
 
       const result = await service.validateUser(email, password);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      expect(mockBcrypt.compare).toHaveBeenCalledWith(
+      expect(mockBcryptCompare).toHaveBeenCalledWith(
         password,
         mockUser.password,
       );
@@ -210,19 +210,19 @@ describe('AuthService', () => {
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      expect(mockBcrypt.compare).not.toHaveBeenCalled();
+      expect(mockBcryptCompare).not.toHaveBeenCalled();
       expect(result).toBeNull();
     });
 
     it('should return null when password is invalid', async () => {
       prismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockBcrypt.compare.mockResolvedValue(false as never);
+      mockBcryptCompare.mockResolvedValue(false as never);
 
       const result = await service.validateUser(email, password);
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      expect(mockBcrypt.compare).toHaveBeenCalledWith(
+      expect(mockBcryptCompare).toHaveBeenCalledWith(
         password,
         mockUser.password,
       );
@@ -239,20 +239,20 @@ describe('AuthService', () => {
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      expect(mockBcrypt.compare).not.toHaveBeenCalled();
+      expect(mockBcryptCompare).not.toHaveBeenCalled();
     });
 
     it('should throw error when password comparison fails', async () => {
       const compareError = new Error('Compare error');
       prismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockBcrypt.compare.mockRejectedValue(compareError as never);
+      mockBcryptCompare.mockRejectedValue(compareError as never);
       await expect(service.validateUser(email, password)).rejects.toThrow(
         compareError,
       );
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      expect(mockBcrypt.compare).toHaveBeenCalledWith(
+      expect(mockBcryptCompare).toHaveBeenCalledWith(
         password,
         mockUser.password,
       );
