@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { useStats } from '../../hooks/useStats'
 import { TrendingUp, Users, DollarSign, Calendar } from 'lucide-react'
 
@@ -44,9 +44,9 @@ export function StatsOverview() {
       color: "text-blue-600"
     },
     {
-      title: "Mais Frequente",
-      value: `${topCustomers?.mostFrequent?.uniqueDays || 0} dias`,
-      description: topCustomers?.mostFrequent?.customerName || 'N/A',
+      title: "Maior Exclusividade",
+      value: `${topCustomers?.mostFrequent?.exclusiveDays || 0} dias`,
+      description: `${topCustomers?.mostFrequent?.customerName || 'N/A'} - Vendas exclusivas`,
       icon: Calendar,
       color: "text-purple-600"
     },

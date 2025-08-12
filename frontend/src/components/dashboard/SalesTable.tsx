@@ -7,6 +7,8 @@ import {
   ResponsiveTableRow,
   ResponsiveTableCell,
 } from "../ui/ResponsiveTable";
+import { useSales } from "../../hooks/useSales";
+import type { NormalizedSale } from "../../services/salesService";
 
 type SalesTableProps = {
   onEdit?: (saleId: string) => void;
@@ -14,20 +16,12 @@ type SalesTableProps = {
   showActions?: boolean;
 };
 
-export function SalesTable({ onEdit, onDelete, showActions = true }: SalesTableProps) {
-  // Mock data for demonstration
-  const salesData = {
-    sales: [
-      {
-        id: "1",
-        customerName: "Guilherme Bais",
-        amount: 100.00,
-        saleDate: "2025-08-01",
-        createdAt: "2025-08-12"
-      }
-    ]
-  };
-  const isLoading = false;
+export function SalesTable({
+  onEdit,
+  onDelete,
+  showActions = true,
+}: SalesTableProps) {
+  const { data: salesData, isLoading, error } = useSales();
 
   const handleDelete = (saleId: string) => {
     if (window.confirm("Tem certeza que deseja excluir esta venda?")) {
@@ -42,6 +36,18 @@ export function SalesTable({ onEdit, onDelete, showActions = true }: SalesTableP
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-red-200 shadow-lg overflow-hidden">
+        <div className="p-6 text-center">
+          <p className="text-red-600">
+            Erro ao carregar vendas. Tente novamente mais tarde.
+          </p>
         </div>
       </div>
     );
@@ -62,7 +68,7 @@ export function SalesTable({ onEdit, onDelete, showActions = true }: SalesTableP
           </ResponsiveTableRow>
         </ResponsiveTableHeader>
         <ResponsiveTableBody>
-          {salesData?.sales?.map((sale) => (
+          {salesData?.sales?.map((sale: NormalizedSale) => (
             <ResponsiveTableRow key={sale.id}>
               <ResponsiveTableCell>
                 <div className="font-medium text-slate-900">

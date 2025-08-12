@@ -23,6 +23,16 @@ export class SalesController {
     return this.salesService.findAll(filters);
   }
 
+  @Get('stats/daily')
+  getDailySalesStats() {
+    return this.salesService.getDailySalesStats();
+  }
+
+  @Get('stats/top-customers')
+  getTopCustomers() {
+    return this.salesService.getTopCustomers();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.salesService.findOne(id);
@@ -44,15 +54,5 @@ export class SalesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.salesService.remove(id);
-  }
-
-  @Get('stats/daily')
-  getDailySalesStats() {
-    return this.salesService.getDailySalesStats();
-  }
-
-  @Get('stats/top-customers')
-  getTopCustomers() {
-    return this.salesService.getTopCustomers();
   }
 }

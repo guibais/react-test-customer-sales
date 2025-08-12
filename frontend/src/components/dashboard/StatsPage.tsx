@@ -118,7 +118,7 @@ export function StatsPage() {
                   </p>
                   <div className="flex items-center text-sm text-sky-600">
                     <div className="w-2 h-2 bg-sky-500 rounded-full mr-2"></div>
-                    {topCustomers.highestVolume.uniqueDays || 0} dias com vendas
+                    {topCustomers.highestVolume.totalSales || 0} compras realizadas
                   </div>
                 </div>
               </div>
@@ -183,7 +183,7 @@ export function StatsPage() {
               <div>
                 <h3 className="text-lg font-bold">Maior Frequência</h3>
                 <p className="text-sm text-amber-600 font-normal">
-                  Dias únicos comprando
+                  Dias únicos de venda exclusiva
                 </p>
               </div>
             </div>
@@ -196,11 +196,11 @@ export function StatsPage() {
                     {topCustomers.mostFrequent.customerName}
                   </p>
                   <p className="text-3xl font-black text-amber-700 mb-2">
-                    {topCustomers.mostFrequent.uniqueDays || 0}
+                    {topCustomers.mostFrequent.exclusiveDays || 0}
                   </p>
                   <div className="flex items-center text-sm text-amber-600">
                     <div className="w-2 h-2 bg-amber-500 rounded-full mr-2"></div>
-                    Dias com compras
+                    Dias com vendas exclusivas
                   </div>
                 </div>
               </div>

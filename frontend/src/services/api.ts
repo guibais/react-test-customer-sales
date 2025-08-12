@@ -74,7 +74,8 @@ export type CustomerStats = {
   customerName: string;
   totalVolume: number;
   averageValue: number;
-  uniqueDays: number;
+  totalSales: number;
+  exclusiveDays: number;
 };
 
 export type TopCustomersResponse = {

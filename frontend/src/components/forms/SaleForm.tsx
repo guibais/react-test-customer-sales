@@ -9,12 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Alert, AlertDescription } from "../ui/alert";
-import { X, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCreateSale, useUpdateSale, useSale } from "../../hooks/useSales";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useState, useEffect } from "react";
+import { Modal } from "../ui/Modal";
 
 type SaleFormProps = {
   saleId?: string;
@@ -80,34 +80,27 @@ export function SaleForm({ saleId, onClose, onSuccess }: SaleFormProps) {
 
   if (isLoadingSale && isEditing) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="flex items-center justify-center p-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Carregando dados da venda...</span>
-          </CardContent>
-        </Card>
-      </div>
+      <Modal 
+        isOpen={true} 
+        onClose={onClose} 
+        title="Carregando..."
+      >
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2 text-sky-600" />
+          <span className="text-slate-600">Carregando dados da venda...</span>
+        </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{isEditing ? "Editar Venda" : "Nova Venda"}</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert className="mb-4">
+    <Modal 
+      isOpen={true} 
+      onClose={onClose} 
+      title={isEditing ? "Editar Venda" : "Nova Venda"}
+    >
+      {error && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -234,8 +227,6 @@ export function SaleForm({ saleId, onClose, onSuccess }: SaleFormProps) {
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+    </Modal>
   );
 }

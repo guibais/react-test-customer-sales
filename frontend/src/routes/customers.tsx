@@ -1,39 +1,41 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useAuth } from '../hooks/useAuth'
-import { DashboardLayout } from '../components/layout/DashboardLayout'
-import { CustomersTable } from '../components/dashboard/CustomersTable'
-import { CustomerForm } from '../components/forms/CustomerForm'
-import { Button } from '../components/ui/button'
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useAuth } from "../hooks/useAuth";
+import { DashboardLayout } from "../components/layout/DashboardLayout.tsx";
+import { CustomersTable } from "../components/dashboard/CustomersTable.tsx";
+import { CustomerForm } from "../components/forms/CustomerForm.tsx";
+import { Button } from "../components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
-export const Route = createFileRoute('/customers')({
+export const Route = createFileRoute("/customers")({
   component: CustomersPage,
-})
+});
 
 function CustomersPage() {
-  const { isAuthenticated } = useAuth()
-  const [showForm, setShowForm] = useState(false)
-  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null)
+  const { isAuthenticated } = useAuth();
+  const [showForm, setShowForm] = useState(false);
+  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(
+    null
+  );
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />
+    return <Navigate to="/login" />;
   }
 
   const handleEdit = (customerId: string) => {
-    setEditingCustomerId(customerId)
-    setShowForm(true)
-  }
+    setEditingCustomerId(customerId);
+    setShowForm(true);
+  };
 
   const handleCloseForm = () => {
-    setShowForm(false)
-    setEditingCustomerId(null)
-  }
+    setShowForm(false);
+    setEditingCustomerId(null);
+  };
 
   const handleFormSuccess = () => {
-    setShowForm(false)
-    setEditingCustomerId(null)
-  }
+    setShowForm(false);
+    setEditingCustomerId(null);
+  };
 
   return (
     <DashboardLayout>
@@ -47,7 +49,7 @@ function CustomersPage() {
               Gerencie os clientes da loja de brinquedos
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowForm(true)}
             className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
@@ -55,12 +57,9 @@ function CustomersPage() {
             Novo Cliente
           </Button>
         </div>
-        
-        <CustomersTable 
-          onEdit={handleEdit}
-          showActions={true}
-        />
-        
+
+        <CustomersTable onEdit={handleEdit} showActions={true} />
+
         {showForm && (
           <CustomerForm
             customerId={editingCustomerId || undefined}
@@ -70,5 +69,5 @@ function CustomersPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  );
 }

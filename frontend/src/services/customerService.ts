@@ -1,9 +1,11 @@
-import { apiClient, type CustomerApiResponse, type Customer } from "./api";
+import { apiClient } from "./api";
 
 export type NormalizedCustomer = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
+  address: string | null;
   birthDate: string | null;
   sales: Array<{
     date: string;
@@ -15,7 +17,7 @@ export type NormalizedCustomer = {
 };
 
 export const normalizeCustomerData = (
-  apiResponse: CustomerApiResponse
+  apiResponse: any
 ): {
   customers: NormalizedCustomer[];
   pagination: {
@@ -23,19 +25,24 @@ export const normalizeCustomerData = (
     page: number;
   };
 } => {
-  const customers = apiResponse.data.clientes.map((cliente) => {
+  const customers = apiResponse.data.clientes.map((cliente: any) => {
     const id = cliente.id;
     const name = cliente.info.nomeCompleto;
     const email = cliente.info.detalhes.email;
+    const phone = cliente.info.detalhes.telefone;
+    const address = cliente.info.detalhes.endereco;
     const birthDate = cliente.info.detalhes.nascimento;
 
-    const sales = cliente.estatisticas.vendas.map((venda) => ({
+    const sales = cliente.estatisticas.vendas.map((venda: any) => ({
       date: venda.data,
       amount: venda.valor,
     }));
 
     const totalSales = sales.length;
-    const totalAmount = sales.reduce((sum, sale) => sum + sale.amount, 0);
+    const totalAmount = sales.reduce(
+      (sum: number, sale: any) => sum + sale.amount,
+      0
+    );
 
     const missingLetter = findMissingLetter(name);
 
@@ -43,6 +50,8 @@ export const normalizeCustomerData = (
       id: id.toString(),
       name,
       email,
+      phone,
+      address,
       birthDate,
       sales,
       totalSales,

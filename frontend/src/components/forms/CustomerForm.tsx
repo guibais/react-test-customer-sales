@@ -1,22 +1,12 @@
-import { useForm } from "@tanstack/react-form";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
-import { X, Loader2 } from "lucide-react";
-import {
-  useCreateCustomer,
-  useUpdateCustomer,
-  useCustomer,
-} from "../../hooks/useCustomers";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Alert, AlertDescription } from '../ui/alert'
+import { Loader2 } from 'lucide-react'
+import { useCreateCustomer, useUpdateCustomer, useCustomer } from '../../hooks/useCustomers'
+import { Modal } from '../ui/Modal'
 
 type CustomerFormProps = {
   customerId?: string;
@@ -24,13 +14,7 @@ type CustomerFormProps = {
   onSuccess: () => void;
 };
 
-type CustomerFormData = {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  birthDate: string;
-};
+
 
 export function CustomerForm({
   customerId,
@@ -99,35 +83,28 @@ export function CustomerForm({
 
   if (isLoading && isEditing) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="flex items-center justify-center p-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Carregando dados do cliente...</span>
-          </CardContent>
-        </Card>
-      </div>
+      <Modal 
+        isOpen={true} 
+        onClose={onClose} 
+        title="Carregando..."
+      >
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2 text-sky-600" />
+          <span className="text-slate-600">Carregando dados do cliente...</span>
+        </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{isEditing ? "Editar Cliente" : "Novo Cliente"}</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-6 w-6 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
+    <Modal 
+      isOpen={true} 
+      onClose={onClose} 
+      title={isEditing ? "Editar Cliente" : "Novo Cliente"}
+    >
+      {error && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
+          <AlertDescription className="text-red-700">{error}</AlertDescription>
             </Alert>
           )}
           <form
@@ -262,8 +239,6 @@ export function CustomerForm({
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+    </Modal>
   );
 }

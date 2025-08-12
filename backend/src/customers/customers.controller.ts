@@ -35,12 +35,13 @@ export class CustomersController {
 
     const transformedData = {
       data: {
-        clientes: result.customers.map((customer) => ({
-          id: customer.id,
+        clientes: result.customers.map((customer, index) => ({
           info: {
             nomeCompleto: customer.name,
             detalhes: {
               email: customer.email,
+              telefone: customer.phone,
+              endereco: customer.address,
               nascimento:
                 customer.birthDate?.toISOString().split('T')[0] || null,
             },
@@ -52,11 +53,12 @@ export class CustomersController {
                 valor: sale.amount,
               })) || [],
           },
-          ...(Math.random() > 0.5 && {
+          ...(index % 2 === 1 && {
             duplicado: {
               nomeCompleto: customer.name,
             },
           }),
+          id: customer.id,
         })),
       },
       meta: {

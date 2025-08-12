@@ -1,12 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateSaleDto, UpdateSaleDto, SaleFiltersDto } from '../dto/sale.dto';
-import {
-  Sale,
-  DailySalesStats,
-  CustomerStats,
-  TopCustomersResponse,
-} from '../types';
+import { Sale, DailySalesStats, TopCustomersResponse } from '../types';
 
 @Injectable()
 export class SalesService {
@@ -146,26 +142,40 @@ export class SalesService {
       },
     });
 
+    const customerIds = customerStats.map((stat) => stat.customerId);
+    const customers = await this.prisma.customer.findMany({
+      where: { id: { in: customerIds } },
+      select: { id: true, name: true },
+    });
+
+    const customerMap = new Map(customers.map((c) => [c.id, c.name]));
+
     const statsWithDetails = await Promise.all(
       customerStats.map(async (stat) => {
-        const customer = await this.prisma.customer.findUnique({
-          where: { id: stat.customerId },
-        });
-
-        const uniqueDaysCount = await this.prisma.sale.groupBy({
+        const customerSaleDates = await this.prisma.sale.groupBy({
           by: ['saleDate'],
           where: { customerId: stat.customerId },
-          _count: {
-            saleDate: true,
-          },
         });
+
+        let exclusiveDays = 0;
+        for (const dateGroup of customerSaleDates) {
+          const salesOnThisDate = await this.prisma.sale.groupBy({
+            by: ['customerId'],
+            where: { saleDate: dateGroup.saleDate },
+          });
+
+          if (salesOnThisDate.length === 1) {
+            exclusiveDays++;
+          }
+        }
 
         return {
           customerId: stat.customerId,
-          customerName: customer?.name || 'Unknown',
+          customerName: customerMap.get(stat.customerId) || 'Unknown',
           totalVolume: stat._sum.amount || 0,
           averageValue: stat._avg.amount || 0,
-          uniqueDays: uniqueDaysCount.length,
+          totalSales: stat._count.id,
+          exclusiveDays,
         };
       }),
     );
@@ -190,7 +200,7 @@ export class SalesService {
     );
 
     const mostFrequent = statsWithDetails.reduce((prev, current) =>
-      prev.uniqueDays > current.uniqueDays ? prev : current,
+      prev.exclusiveDays > current.exclusiveDays ? prev : current,
     );
 
     return {

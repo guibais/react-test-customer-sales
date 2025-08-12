@@ -67,7 +67,7 @@ export function CustomersTable({
                 </div>
               </ResponsiveTableCell>
               <ResponsiveTableCell>{customer.email}</ResponsiveTableCell>
-              <ResponsiveTableCell>N/A</ResponsiveTableCell>
+              <ResponsiveTableCell>{customer.phone || "-"}</ResponsiveTableCell>
               <ResponsiveTableCell>
                 {customer.birthDate
                   ? new Date(customer.birthDate).toLocaleDateString("pt-BR")
