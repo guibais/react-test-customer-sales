@@ -16,7 +16,7 @@ export default tseslint.config(
       globals: {
         ...globals.node,
         ...globals.jest,
-      }, 
+      },
       sourceType: 'commonjs',
       parserOptions: {
         projectService: true,
@@ -34,6 +34,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 );
