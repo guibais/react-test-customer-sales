@@ -1,0 +1,94 @@
+name: Coverage Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Setup test environment
+      working-directory: ./backend
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
+        echo "JWT_SECRET=test-jwt-secret-key-for-coverage" >> .env.test
+        echo "JWT_EXPIRES_IN=1h" >> .env.test
+        echo "NODE_ENV=test" >> .env.test
+
+    - name: Generate Prisma client
+      working-directory: ./backend
+      run: npx prisma generate
+
+    - name: Run migrations
+      working-directory: ./backend
+      run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+    - name: Run coverage tests
+      working-directory: ./backend
+      run: npm run test:cov -- --coverage --coverageReporters=lcov --coverageReporters=text-summary
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        JWT_SECRET: test-jwt-secret-key-for-coverage
+        JWT_EXPIRES_IN: 1h
+
+    - name: Coverage threshold check
+      working-directory: ./backend
+      run: |
+        echo "Checking coverage thresholds..."
+        npm run test:cov -- --coverage --coverageThreshold='{"global":{"statements":100,"branches":90,"functions":100,"lines":100}}'
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        JWT_SECRET: test-jwt-secret-key-for-coverage
+        JWT_EXPIRES_IN: 1h
+
+    - name: Generate coverage badge
+      uses: romeovs/lcov-reporter-action@v0.3.1
+      with:
+        lcov-file: ./backend/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: romeovs/lcov-reporter-action@v0.3.1
+      with:
+        lcov-file: ./backend/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        title: Backend Test Coverage

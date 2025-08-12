@@ -1,0 +1,101 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Setup test environment
+      working-directory: ./backend
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
+        echo "JWT_SECRET=test-jwt-secret-for-pr" >> .env.test
+        echo "JWT_EXPIRES_IN=1h" >> .env.test
+        echo "NODE_ENV=test" >> .env.test
+
+    - name: Generate Prisma client
+      working-directory: ./backend
+      run: npx prisma generate
+
+    - name: Run migrations
+      working-directory: ./backend
+      run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+    - name: Lint check
+      working-directory: ./backend
+      run: npm run lint
+
+    - name: Type check
+      working-directory: ./backend
+      run: npx tsc --noEmit
+
+    - name: Run all tests
+      working-directory: ./backend
+      run: npm run test:cov
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        JWT_SECRET: test-jwt-secret-for-pr
+        JWT_EXPIRES_IN: 1h
+
+    - name: Validate 100% coverage
+      working-directory: ./backend
+      run: |
+        echo "Validating 100% statements coverage..."
+        COVERAGE=$(npm run test:cov 2>/dev/null | grep "All files" | grep -o "[0-9]\+\.[0-9]\+%" | head -1 | sed 's/%//')
+        if (( $(echo "$COVERAGE < 100" | bc -l) )); then
+          echo "❌ Coverage is $COVERAGE%, but 100% is required"
+          exit 1
+        else
+          echo "✅ Coverage is $COVERAGE% - requirement met!"
+        fi
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        JWT_SECRET: test-jwt-secret-for-pr
+        JWT_EXPIRES_IN: 1h
+
+    - name: PR Success
+      run: |
+        echo "🎉 PR validation successful!"
+        echo "✅ All tests passed"
+        echo "✅ 100% coverage maintained"
+        echo "✅ Linting passed"
+        echo "✅ Type checking passed"
