@@ -14,11 +14,11 @@ describe('Login Flow E2E', () => {
   it('should allow user interaction with form elements', () => {
     cy.visit('/login')
     
-    cy.get('[data-testid="email-input"]').type('test@example.com')
-    cy.get('[data-testid="email-input"]').should('have.value', 'test@example.com')
+    cy.get('[data-testid="email-input"]').type('e2e@e2e.com.br')
+    cy.get('[data-testid="email-input"]').should('have.value', 'e2e@e2e.com.br')
     
-    cy.get('[data-testid="password-input"]').type('password123')
-    cy.get('[data-testid="password-input"]').should('have.value', 'password123')
+    cy.get('[data-testid="password-input"]').type('E2EE@E')
+    cy.get('[data-testid="password-input"]').should('have.value', 'E2EE@E')
     
     cy.get('[data-testid="login-button"]').should('not.be.disabled')
   })
@@ -78,8 +78,8 @@ describe('Login Flow E2E', () => {
   it('should handle login form submission with test credentials', () => {
     cy.visit('/login')
     
-    cy.get('[data-testid="email-input"]').type('test@example.com')
-    cy.get('[data-testid="password-input"]').type('password123')
+    cy.get('[data-testid="email-input"]').type('e2e@e2e.com.br')
+    cy.get('[data-testid="password-input"]').type('E2EE@E')
     
     // Verificar que o botão está habilitado antes do clique
     cy.get('[data-testid="login-button"]').should('not.be.disabled')
