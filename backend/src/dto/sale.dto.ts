@@ -6,6 +6,7 @@ import {
   Min,
   IsOptional,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateSaleDto {
   @IsString()
@@ -41,10 +42,12 @@ export class SaleFiltersDto {
   customerId?: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value ? parseInt(value as string) : undefined))
   @IsNumber()
   page?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (value ? parseInt(value as string) : undefined))
   @IsNumber()
   limit?: number;
 }

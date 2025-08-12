@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { customerService } from '../services/customerService';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { customerService } from "../services/customerService";
 
 export const useCustomers = (filters?: {
   name?: string;
@@ -8,7 +8,7 @@ export const useCustomers = (filters?: {
   limit?: number;
 }) => {
   return useQuery({
-    queryKey: ['customers', filters],
+    queryKey: ["customers", filters],
     queryFn: () => customerService.getCustomers(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -16,7 +16,7 @@ export const useCustomers = (filters?: {
 
 export const useCustomer = (customerId?: string) => {
   return useQuery({
-    queryKey: ['customer', customerId],
+    queryKey: ["customer", customerId],
     queryFn: () => customerService.getCustomer(customerId!),
     enabled: !!customerId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -29,7 +29,10 @@ export const useCreateCustomer = () => {
   return useMutation({
     mutationFn: customerService.createCustomer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };
@@ -41,7 +44,10 @@ export const useUpdateCustomer = () => {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       customerService.updateCustomer(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };
@@ -52,7 +58,10 @@ export const useDeleteCustomer = () => {
   return useMutation({
     mutationFn: customerService.deleteCustomer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };

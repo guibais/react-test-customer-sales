@@ -29,6 +29,9 @@ export const useCreateSale = () => {
     mutationFn: salesService.createSale,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };
@@ -41,6 +44,9 @@ export const useUpdateSale = () => {
       salesService.updateSale(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };
@@ -52,6 +58,9 @@ export const useDeleteSale = () => {
     mutationFn: salesService.deleteSale,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["dailySalesStats"] });
+      queryClient.invalidateQueries({ queryKey: ["topCustomers"] });
     },
   });
 };

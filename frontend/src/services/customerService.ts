@@ -23,6 +23,7 @@ export const normalizeCustomerData = (
   pagination: {
     total: number;
     page: number;
+    totalPages: number;
   };
 } => {
   const customers = apiResponse.data.clientes.map((cliente: any) => {
@@ -65,6 +66,7 @@ export const normalizeCustomerData = (
     pagination: {
       total: apiResponse.meta.registroTotal,
       page: apiResponse.meta.pagina,
+      totalPages: Math.ceil(apiResponse.meta.registroTotal / 10),
     },
   };
 };
