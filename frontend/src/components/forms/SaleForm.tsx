@@ -42,15 +42,15 @@ export function SaleForm({ saleId, saleData, onClose, onSuccess }: SaleFormProps
     onSubmit: async ({ value }) => {
       try {
         setError(null);
-        const saleData = {
-          customerId: value.customerId,
-          amount: parseFloat(value.amount),
-          saleDate: value.saleDate,
-        };
-
+        
         if (isEditing && saleId) {
+          const updateData = {
+            amount: parseFloat(value.amount),
+            saleDate: value.saleDate,
+          };
+          
           updateSale(
-            { id: saleId, data: saleData },
+            { id: saleId, data: updateData },
             {
               onSuccess: () => onSuccess(),
               onError: (err: any) =>
@@ -58,7 +58,13 @@ export function SaleForm({ saleId, saleData, onClose, onSuccess }: SaleFormProps
             }
           );
         } else {
-          createSale(saleData, {
+          const createData = {
+            customerId: value.customerId,
+            amount: parseFloat(value.amount),
+            saleDate: value.saleDate,
+          };
+          
+          createSale(createData, {
             onSuccess: () => onSuccess(),
             onError: (err: any) =>
               setError(err.message || "Erro ao criar venda"),

@@ -44,7 +44,6 @@ export const salesService = {
   },
 
   async updateSale(id: string, data: Partial<{
-    customerId: string;
     amount: number;
     saleDate: string;
   }>) {

@@ -23,10 +23,6 @@ export class CreateSaleDto {
 
 export class UpdateSaleDto {
   @IsOptional()
-  @IsString()
-  customerId?: string;
-
-  @IsOptional()
   @IsNumber()
   @Min(0)
   amount?: number;

@@ -82,7 +82,7 @@ export class SalesService {
     }
 
     const data = {
-      ...updateSaleDto,
+      amount: updateSaleDto.amount,
       ...(updateSaleDto.saleDate && {
         saleDate: new Date(updateSaleDto.saleDate),
       }),
