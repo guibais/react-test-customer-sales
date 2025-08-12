@@ -7,6 +7,7 @@ Sistema completo de gestão para loja de brinquedos desenvolvido como desafio t�
 ## 🚀 Tecnologias
 
 ### Backend
+
 - **NestJS** - Framework Node.js
 - **Prisma** - ORM para PostgreSQL
 - **JWT** - Autenticação
@@ -14,6 +15,7 @@ Sistema completo de gestão para loja de brinquedos desenvolvido como desafio t�
 - **Jest** - Testes unitários e E2E
 
 ### Frontend
+
 - **React 19** - Interface de usuário
 - **TanStack Router** - Roteamento type-safe
 - **TanStack Query** - Gerenciamento de estado servidor
@@ -24,23 +26,27 @@ Sistema completo de gestão para loja de brinquedos desenvolvido como desafio t�
 ## 📋 Funcionalidades
 
 ### 🔐 Autenticação
+
 - Login/registro com JWT
 - Rotas protegidas
 - Validação de formulários
 
 ### 👥 Gestão de Clientes
+
 - CRUD completo de clientes
 - Filtros por nome e email
 - Normalização de dados da API
 - Campo especial: primeira letra ausente no nome
 
 ### 📊 Vendas e Estatísticas
+
 - Registro de vendas por cliente
 - Gráfico de vendas diárias
 - Top clientes por volume, média e frequência
 - Dashboard com métricas em tempo real
 
 ### 🧪 Qualidade de Código
+
 - **100% cobertura** de testes no backend
 - Testes E2E com Cypress
 - CI/CD automatizado
@@ -49,6 +55,7 @@ Sistema completo de gestão para loja de brinquedos desenvolvido como desafio t�
 ## 🛠️ Como Executar
 
 ### Pré-requisitos
+
 - **Bun** >= 1.0
 - **PostgreSQL** >= 14
 - **Node.js** >= 18
@@ -91,6 +98,7 @@ O frontend estará disponível em `http://localhost:3000`
 ## 🧪 Executar Testes
 
 ### Backend - Testes Unitários
+
 ```bash
 cd backend
 
@@ -105,6 +113,7 @@ bun run test:watch
 ```
 
 ### Frontend - Testes E2E (Cypress)
+
 ```bash
 cd frontend
 
@@ -119,6 +128,7 @@ bun run test:e2e:direct
 ```
 
 ### Executar Todos os Testes
+
 ```bash
 # No frontend
 bun run test:all
@@ -168,15 +178,9 @@ Este projeto foi desenvolvido como resposta a um desafio técnico que avaliou:
 
 - **Normalização de dados** - Tratamento da API desorganizada conforme especificação
 - **Campo especial** - Algoritmo para encontrar primeira letra ausente no nome
-- **Testes robustos** - 100% cobertura statements no backend
+- **Testes robustos** - 99% cobertura statements no backend
 - **UX moderna** - Interface responsiva com Tailwind CSS
 - **Performance** - TanStack Query para cache inteligente
-
-## 📊 Cobertura de Testes
-
-- **Backend**: 100% statements, 93.1% branches
-- **Frontend**: Testes E2E completos com Cypress
-- **CI/CD**: Pipeline automatizado com validações
 
 ## 🚀 Deploy
 
