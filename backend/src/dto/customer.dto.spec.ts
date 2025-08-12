@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+import { plainToClass } from 'class-transformer';
 import {
   CreateCustomerDto,
   UpdateCustomerDto,
@@ -116,6 +117,40 @@ describe('Customer DTOs', () => {
 
       const errors = await validate(dto);
       expect(errors).toHaveLength(0);
+    });
+
+    it('should pass validation with empty object and use defaults', async () => {
+      const dto = plainToClass(CustomerFiltersDto, {});
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+      expect(dto.name).toBeUndefined();
+      expect(dto.email).toBeUndefined();
+      expect(dto.page).toBe(1);
+      expect(dto.limit).toBe(10);
+    });
+
+    it('should transform string numbers to integers for page and limit', async () => {
+      const dto = plainToClass(CustomerFiltersDto, {
+        page: '3',
+        limit: '15',
+      });
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+      expect(dto.page).toBe(3);
+      expect(dto.limit).toBe(15);
+      expect(typeof dto.page).toBe('number');
+      expect(typeof dto.limit).toBe('number');
+    });
+
+    it('should handle undefined values in transform', async () => {
+      const dto = plainToClass(CustomerFiltersDto, {});
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+      expect(dto.page).toBe(1);
+      expect(dto.limit).toBe(10);
     });
 
     it('should have default page value', () => {

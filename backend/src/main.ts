@@ -17,10 +17,3 @@ export async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 9198);
 }
-
-if (require.main === module) {
-  bootstrap().catch((error) => {
-    console.error('Application failed to start:', error);
-    process.exit(1);
-  });
-}
