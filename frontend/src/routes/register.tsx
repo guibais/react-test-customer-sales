@@ -15,10 +15,6 @@ export const Route = createFileRoute('/register')({
 function RegisterPage() {
   const { register, isRegistering, registerError, isAuthenticated } = useAuth()
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" />
-  }
-
   const form = useForm({
     defaultValues: {
       name: '',
@@ -27,16 +23,19 @@ function RegisterPage() {
       confirmPassword: '',
     },
     onSubmit: async ({ value }) => {
-      if (value.password !== value.confirmPassword) {
-        return
+      if (value.password === value.confirmPassword) {
+        register({
+          name: value.name,
+          email: value.email,
+          password: value.password,
+        })
       }
-      register({
-        name: value.name,
-        email: value.email,
-        password: value.password,
-      })
     },
   })
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" />
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

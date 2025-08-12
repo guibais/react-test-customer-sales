@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import {
@@ -18,6 +19,7 @@ import {
   CustomerFiltersDto,
 } from '../dto/customer.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthRequest } from '../types/auth.types';
 
 @Controller('customers')
 @UseGuards(JwtAuthGuard)
@@ -25,13 +27,13 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  create(@Body() createCustomerDto: CreateCustomerDto) {
-    return this.customersService.create(createCustomerDto);
+  create(@Request() req: AuthRequest, @Body() createCustomerDto: CreateCustomerDto) {
+    return this.customersService.create(req.user.id, createCustomerDto);
   }
 
   @Get()
-  async findAll(@Query() filters: CustomerFiltersDto) {
-    const result = await this.customersService.findAll(filters);
+  async findAll(@Request() req: AuthRequest, @Query() filters: CustomerFiltersDto) {
+    const result = await this.customersService.findAll(req.user.id, filters);
 
     const transformedData = {
       data: {
@@ -74,21 +76,22 @@ export class CustomersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customersService.findOne(id);
+  findOne(@Request() req: AuthRequest, @Param('id') id: string) {
+    return this.customersService.findOne(req.user.id, id);
   }
 
   @Patch(':id')
   update(
+    @Request() req: AuthRequest,
     @Param('id') id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,
   ) {
-    return this.customersService.update(id, updateCustomerDto);
+    return this.customersService.update(req.user.id, id, updateCustomerDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.customersService.remove(id);
+  remove(@Request() req: AuthRequest, @Param('id') id: string) {
+    return this.customersService.remove(req.user.id, id);
   }
 }

@@ -32,16 +32,6 @@ describe('CustomersController', () => {
     ],
   };
 
-  const mockServiceResponse = {
-    customers: [mockCustomerWithSales],
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 1,
-      totalPages: 1,
-    },
-  };
-
   beforeEach(async () => {
     const mockCustomersService = {
       create: jest.fn(),

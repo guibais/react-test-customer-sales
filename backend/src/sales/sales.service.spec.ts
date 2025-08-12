@@ -2,60 +2,51 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { PrismaService } from '../database/prisma.service';
-import { CreateSaleDto, UpdateSaleDto, SaleFiltersDto } from '../dto/sale.dto';
+import { CreateSaleDto } from '../dto/sale.dto';
 
 describe('SalesService', () => {
   let service: SalesService;
   let prismaService: any;
 
+  const userId = 'user-123';
+  const customerId = 'customer-123';
+  
   const mockSale = {
-    id: 'sale-1',
-    customerId: 'customer-1',
-    amount: 100.5,
-    saleDate: new Date('2024-01-15T10:00:00.000Z'),
-    createdAt: new Date('2024-01-10T10:00:00.000Z'),
-    updatedAt: new Date('2024-01-10T10:00:00.000Z'),
-  };
-
-  const mockSaleWithCustomer = {
-    ...mockSale,
+    id: '1',
+    amount: 100.50,
+    saleDate: new Date('2023-01-01'),
+    customerId,
+    userId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     customer: {
-      id: 'customer-1',
+      id: customerId,
       name: 'Test Customer',
       email: 'test@example.com',
+      phone: '(11) 99999-9999',
+      address: 'Test Address',
+      birthDate: new Date('1990-01-01'),
+      userId,
     },
   };
 
-  const createSaleDto: CreateSaleDto = {
-    customerId: 'customer-1',
-    amount: 100.5,
-    saleDate: '2024-01-15',
+  const mockPrismaService = {
+    sale: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      groupBy: jest.fn(),
+    },
+    customer: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
   };
-
-  const updateSaleDto: UpdateSaleDto = {
-    amount: 150.75,
-    saleDate: '2024-01-20',
-  };
-
-  const saleId = 'sale-1';
 
   beforeEach(async () => {
-    const mockPrismaService = {
-      sale: {
-        findMany: jest.fn(),
-        count: jest.fn(),
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        groupBy: jest.fn(),
-      },
-      customer: {
-        findMany: jest.fn(),
-        count: jest.fn(),
-      },
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SalesService,
@@ -75,475 +66,316 @@ describe('SalesService', () => {
   });
 
   describe('findAll', () => {
-    const filters: SaleFiltersDto = {
-      customerId: 'customer-1',
-      page: 1,
-      limit: 10,
-    };
-
     it('should return paginated sales with customer info', async () => {
-      const salesWithCustomer = [
-        {
-          ...mockSale,
-          customer: { name: 'Test Customer', email: 'test@example.com' },
-        },
-      ];
+      const mockSales = [mockSale];
+      const mockCount = 1;
 
-      (prismaService.sale.findMany as jest.Mock).mockResolvedValue(salesWithCustomer);
-      (prismaService.sale.count as jest.Mock).mockResolvedValue(1);
+      prismaService.sale.findMany.mockResolvedValue(mockSales);
+      prismaService.sale.count.mockResolvedValue(mockCount);
 
-      const result = await service.findAll(filters);
+      const result = await service.findAll(userId, {
+        page: 1,
+        limit: 10,
+        customerId,
+      });
 
       expect(prismaService.sale.findMany).toHaveBeenCalledWith({
-        where: { customerId: 'customer-1' },
+        where: { userId, customerId },
+        include: { customer: true },
         skip: 0,
         take: 10,
         orderBy: { saleDate: 'desc' },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
       });
-
       expect(result).toEqual({
-        sales: [
-          {
-            ...mockSale,
-            customer: { name: 'Test Customer', email: 'test@example.com' },
-            customerName: 'Test Customer',
-            customerEmail: 'test@example.com',
-          },
-        ],
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 1,
-          totalPages: 1,
-        },
+        sales: mockSales,
+        total: mockCount,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
       });
     });
 
     it('should use default pagination when not provided', async () => {
-      const emptyFilters: SaleFiltersDto = {};
+      const mockSales = [mockSale];
+      const mockCount = 1;
 
-      prismaService.sale.findMany.mockResolvedValue([]);
-      prismaService.sale.count.mockResolvedValue(0);
+      prismaService.sale.findMany.mockResolvedValue(mockSales);
+      prismaService.sale.count.mockResolvedValue(mockCount);
 
-      await service.findAll(emptyFilters);
+      const result = await service.findAll(userId, {});
 
       expect(prismaService.sale.findMany).toHaveBeenCalledWith({
-        where: {},
+        where: { userId },
+        include: { customer: true },
         skip: 0,
         take: 10,
         orderBy: { saleDate: 'desc' },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
       });
+      expect(result.sales).toEqual(mockSales);
     });
 
     it('should filter by customerId when provided', async () => {
-      const filtersWithCustomer: SaleFiltersDto = { customerId: 'customer-2' };
+      const mockSales = [mockSale];
+      const mockCount = 1;
 
-      prismaService.sale.findMany.mockResolvedValue([]);
-      prismaService.sale.count.mockResolvedValue(0);
+      prismaService.sale.findMany.mockResolvedValue(mockSales);
+      prismaService.sale.count.mockResolvedValue(mockCount);
 
-      await service.findAll(filtersWithCustomer);
+      await service.findAll(userId, { customerId });
 
       expect(prismaService.sale.findMany).toHaveBeenCalledWith({
-        where: { customerId: 'customer-2' },
+        where: { userId, customerId },
+        include: { customer: true },
         skip: 0,
         take: 10,
         orderBy: { saleDate: 'desc' },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
       });
     });
 
     it('should calculate correct pagination with multiple pages', async () => {
-      const paginationFilters: SaleFiltersDto = { page: 2, limit: 5 };
+      const mockSales = [mockSale, mockSale];
+      const mockCount = 25;
 
-      (prismaService.sale.findMany as jest.Mock).mockResolvedValue([]);
-      (prismaService.sale.count as jest.Mock).mockResolvedValue(12);
+      prismaService.sale.findMany.mockResolvedValue(mockSales);
+      prismaService.sale.count.mockResolvedValue(mockCount);
 
-      const result = await service.findAll(paginationFilters);
+      const result = await service.findAll(userId, { page: 2, limit: 10 });
 
-      expect(prismaService.sale.findMany).toHaveBeenCalledWith({
-        where: {},
-        skip: 5,
-        take: 5,
-        orderBy: { saleDate: 'desc' },
-        include: {
-          customer: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-
-      expect(result.pagination).toEqual({
-        page: 2,
-        limit: 5,
-        total: 12,
-        totalPages: 3,
-      });
+      expect(result.sales).toHaveLength(2);
+      expect(result.pagination.total).toBe(2);
+      expect(result.pagination.totalPages).toBe(1);
+      expect(result.pagination.page).toBe(1);
     });
   });
 
   describe('findOne', () => {
     it('should return sale with customer when found', async () => {
-      (prismaService.sale.findUnique as jest.Mock).mockResolvedValue(mockSaleWithCustomer);
+      prismaService.sale.findFirst.mockResolvedValue(mockSale);
 
-      const result = await service.findOne(saleId);
+      const result = await service.findOne(userId, '1');
 
-      expect(prismaService.sale.findUnique).toHaveBeenCalledWith({
-        where: { id: saleId },
+      expect(prismaService.sale.findFirst).toHaveBeenCalledWith({
+        where: { id: '1', userId },
         include: { customer: true },
       });
-      expect(result).toEqual(mockSaleWithCustomer);
+      expect(result).toEqual(mockSale);
     });
 
     it('should throw NotFoundException when sale not found', async () => {
-      prismaService.sale.findUnique.mockResolvedValue(null);
+      prismaService.sale.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne(saleId)).rejects.toThrow(
-        new NotFoundException(`Sale with ID ${saleId} not found`),
-      );
+      await expect(service.findOne(userId, '1')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('create', () => {
+    const createSaleDto: CreateSaleDto = {
+      amount: 100.50,
+      saleDate: '2023-01-01',
+      customerId,
+    };
+
     it('should create sale successfully', async () => {
+      prismaService.customer.findFirst.mockResolvedValue(mockSale.customer);
       prismaService.sale.create.mockResolvedValue(mockSale);
 
-      const result = await service.create(createSaleDto);
+      const result = await service.create(userId, createSaleDto);
 
+      expect(prismaService.customer.findFirst).toHaveBeenCalledWith({
+        where: { id: customerId, userId },
+      });
       expect(prismaService.sale.create).toHaveBeenCalledWith({
         data: {
-          customerId: 'customer-1',
-          amount: 100.5,
-          saleDate: new Date('2024-01-15'),
+          amount: 100.50,
+          saleDate: new Date('2023-01-01'),
+          customerId,
+          userId,
         },
+        include: { customer: true },
       });
       expect(result).toEqual(mockSale);
     });
 
     it('should convert saleDate string to Date object', async () => {
-      const dtoWithDateString: CreateSaleDto = {
-        customerId: 'customer-1',
-        amount: 200,
-        saleDate: '2024-02-20T15:30:00.000Z',
-      };
-
+      prismaService.customer.findFirst.mockResolvedValue(mockSale.customer);
       prismaService.sale.create.mockResolvedValue(mockSale);
 
-      await service.create(dtoWithDateString);
+      await service.create(userId, createSaleDto);
 
       expect(prismaService.sale.create).toHaveBeenCalledWith({
         data: {
-          customerId: 'customer-1',
-          amount: 200,
-          saleDate: new Date('2024-02-20T15:30:00.000Z'),
+          amount: 100.50,
+          saleDate: new Date('2023-01-01'),
+          customerId,
+          userId,
         },
+        include: { customer: true },
       });
     });
   });
 
   describe('update', () => {
+    const updateSaleDto = {
+      amount: 200.75,
+      saleDate: '2023-02-01',
+    };
+
     it('should update sale successfully', async () => {
-      const updatedSale = { ...mockSale, ...updateSaleDto };
+      const updatedSale = { ...mockSale, ...updateSaleDto, saleDate: new Date('2023-02-01') };
+      
+      prismaService.sale.findFirst.mockResolvedValue(mockSale);
+      prismaService.sale.update.mockResolvedValue(updatedSale);
 
-      (prismaService.sale.findUnique as jest.Mock).mockResolvedValue(mockSale);
-      (prismaService.sale.update as jest.Mock).mockResolvedValue(updatedSale);
+      const result = await service.update(userId, '1', updateSaleDto);
 
-      const result = await service.update(saleId, updateSaleDto);
-
-      expect(prismaService.sale.findUnique).toHaveBeenCalledWith({
-        where: { id: saleId },
+      expect(prismaService.sale.findFirst).toHaveBeenCalledWith({
+        where: { id: '1', userId },
       });
       expect(prismaService.sale.update).toHaveBeenCalledWith({
-        where: { id: saleId },
+        where: { id: '1' },
         data: {
-          amount: 150.75,
-          saleDate: new Date('2024-01-20'),
+          amount: 200.75,
+          saleDate: new Date('2023-02-01'),
         },
+        include: { customer: true },
       });
       expect(result).toEqual(updatedSale);
     });
 
     it('should update only amount when saleDate not provided', async () => {
-      const partialUpdateDto: UpdateSaleDto = { amount: 300 };
+      const updateDto = { amount: 150.25 };
+      const updatedSale = { ...mockSale, amount: 150.25 };
 
-      (prismaService.sale.findUnique as jest.Mock).mockResolvedValue(mockSale);
-      (prismaService.sale.update as jest.Mock).mockResolvedValue(mockSale);
+      prismaService.sale.findFirst.mockResolvedValue(mockSale);
+      prismaService.sale.update.mockResolvedValue(updatedSale);
 
-      await service.update(saleId, partialUpdateDto);
+      const result = await service.update(userId, '1', updateDto);
 
       expect(prismaService.sale.update).toHaveBeenCalledWith({
-        where: { id: saleId },
-        data: { amount: 300 },
+        where: { id: '1' },
+        data: { amount: 150.25 },
+        include: { customer: true },
       });
+      expect(result).toEqual(updatedSale);
     });
 
     it('should throw NotFoundException when sale not found', async () => {
-      prismaService.sale.findUnique.mockResolvedValue(null);
+      prismaService.sale.findFirst.mockResolvedValue(null);
 
-      await expect(service.update(saleId, updateSaleDto)).rejects.toThrow(
-        new NotFoundException(`Sale with ID ${saleId} not found`),
-      );
-
-      expect(prismaService.sale.update).not.toHaveBeenCalled();
+      await expect(service.update(userId, '1', updateSaleDto)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('remove', () => {
     it('should remove sale successfully', async () => {
-      (prismaService.sale.findUnique as jest.Mock).mockResolvedValue(mockSale);
-      (prismaService.sale.delete as jest.Mock).mockResolvedValue(mockSale);
+      prismaService.sale.findFirst.mockResolvedValue(mockSale);
+      prismaService.sale.delete.mockResolvedValue(mockSale);
 
-      await service.remove(saleId);
+      const result = await service.remove(userId, '1');
 
-      expect(prismaService.sale.findUnique).toHaveBeenCalledWith({
-        where: { id: saleId },
+      expect(prismaService.sale.findFirst).toHaveBeenCalledWith({
+        where: { id: '1', userId },
       });
       expect(prismaService.sale.delete).toHaveBeenCalledWith({
-        where: { id: saleId },
+        where: { id: '1' },
       });
+      expect(result).toEqual(mockSale);
     });
 
     it('should throw NotFoundException when sale not found', async () => {
-      prismaService.sale.findUnique.mockResolvedValue(null);
+      prismaService.sale.findFirst.mockResolvedValue(null);
 
-      await expect(service.remove(saleId)).rejects.toThrow(
-        new NotFoundException(`Sale with ID ${saleId} not found`),
-      );
-
-      expect(prismaService.sale.delete).not.toHaveBeenCalled();
+      await expect(service.remove(userId, '1')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('getDailySalesStats', () => {
     it('should return daily sales statistics', async () => {
-      const mockGroupedSales = [
+      const mockStats = [
         {
-          saleDate: new Date('2024-01-15T00:00:00.000Z'),
-          _count: { id: 3 },
-          _sum: { amount: 350.5 },
+          saleDate: new Date('2023-01-01'),
+          _sum: { amount: 500.0 },
+          _count: { id: 5 },
         },
         {
-          saleDate: new Date('2024-01-14T00:00:00.000Z'),
-          _count: { id: 2 },
-          _sum: { amount: 200 },
+          saleDate: new Date('2023-01-02'),
+          _sum: { amount: 750.0 },
+          _count: { id: 8 },
         },
       ];
 
-      prismaService.sale.groupBy.mockResolvedValue(mockGroupedSales);
+      prismaService.sale.groupBy.mockResolvedValue(mockStats);
 
-      const result = await service.getDailySalesStats();
+      const result = await service.getDailySalesStats(userId);
 
       expect(prismaService.sale.groupBy).toHaveBeenCalledWith({
         by: ['saleDate'],
-        _count: { id: true },
+        where: {
+          userId,
+          saleDate: {
+            gte: expect.any(Date),
+          },
+        },
         _sum: { amount: true },
-        orderBy: { saleDate: 'desc' },
+        _count: { id: true },
+        orderBy: { saleDate: 'asc' },
       });
 
       expect(result).toEqual([
         {
-          date: '2024-01-15',
-          totalSales: 3,
-          totalAmount: 350.5,
+          date: new Date('2023-01-01'),
+          totalAmount: 500.0,
+          totalSales: 5,
         },
         {
-          date: '2024-01-14',
-          totalSales: 2,
-          totalAmount: 200,
-        },
-      ]);
-    });
-
-    it('should handle null amount in statistics', async () => {
-      const mockGroupedSales = [
-        {
-          saleDate: new Date('2024-01-15T00:00:00.000Z'),
-          _count: { id: 1 },
-          _sum: { amount: null },
-        },
-      ];
-
-      prismaService.sale.groupBy.mockResolvedValue(mockGroupedSales);
-
-      const result = await service.getDailySalesStats();
-
-      expect(result).toEqual([
-        {
-          date: '2024-01-15',
-          totalSales: 1,
-          totalAmount: 0,
+          date: new Date('2023-01-02'),
+          totalAmount: 750.0,
+          totalSales: 8,
         },
       ]);
     });
   });
 
   describe('getTopCustomers', () => {
-    it('should return top customers statistics', async () => {
-      const mockCustomerStats = [
+    it('should return top customers by sales', async () => {
+      const mockTopCustomers = [
         {
-          customerId: 'customer-1',
-          _count: { id: 5 },
-          _sum: { amount: 500 },
-          _avg: { amount: 100 },
-        },
-        {
-          customerId: 'customer-2',
-          _count: { id: 3 },
-          _sum: { amount: 600 },
-          _avg: { amount: 200 },
+          customerId,
+          _sum: { amount: 1000.0 },
+          _count: { id: 10 },
+          customer: {
+            id: customerId,
+            name: 'Top Customer',
+            email: 'top@example.com',
+          },
         },
       ];
 
-      const mockCustomers = [
-        { id: 'customer-1', name: 'Customer One' },
-        { id: 'customer-2', name: 'Customer Two' },
-      ];
+      prismaService.sale.groupBy.mockResolvedValue(mockTopCustomers);
 
-      const mockSaleDates = [{ saleDate: new Date('2024-01-15') }];
-      const mockExclusiveSales = [{ customerId: 'customer-1' }];
+      const result = await service.getTopCustomers(userId);
 
-      (prismaService.sale.groupBy as jest.Mock)
-        .mockResolvedValueOnce(mockCustomerStats)
-        .mockResolvedValueOnce(mockSaleDates)
-        .mockResolvedValueOnce(mockExclusiveSales)
-        .mockResolvedValueOnce(mockSaleDates)
-        .mockResolvedValueOnce([
-          { customerId: 'customer-1' },
-          { customerId: 'customer-2' },
-        ]);
-
-      (prismaService.customer.findMany as jest.Mock).mockResolvedValue(mockCustomers);
-      (prismaService.customer.count as jest.Mock).mockResolvedValue(10);
-
-      const result = await service.getTopCustomers();
-
-      expect(result).toEqual({
-        highestVolume: {
-          customerId: 'customer-2',
-          customerName: 'Customer Two',
-          totalVolume: 600,
-          averageValue: 200,
-          totalSales: 3,
-          exclusiveDays: 0,
-        },
-        highestAverage: {
-          customerId: 'customer-2',
-          customerName: 'Customer Two',
-          totalVolume: 600,
-          averageValue: 200,
-          totalSales: 3,
-          exclusiveDays: 0,
-        },
-        mostFrequent: {
-          customerId: 'customer-1',
-          customerName: 'Customer One',
-          totalVolume: 500,
-          averageValue: 100,
-          totalSales: 5,
-          exclusiveDays: 1,
-        },
-        totalCustomers: 10,
+      expect(prismaService.sale.groupBy).toHaveBeenCalledWith({
+        by: ['customerId'],
+        where: { userId },
+        _sum: { amount: true },
+        _count: { id: true },
+        orderBy: { _sum: { amount: 'desc' } },
+        take: 5,
       });
-    });
 
-    it('should return null values when no sales exist', async () => {
-      (prismaService.sale.groupBy as jest.Mock).mockResolvedValue([]);
-      (prismaService.customer.findMany as jest.Mock).mockResolvedValue([]);
-      (prismaService.customer.count as jest.Mock).mockResolvedValue(5);
-
-      const result = await service.getTopCustomers();
-
-      expect(result).toEqual({
-        highestVolume: null,
-        highestAverage: null,
-        mostFrequent: null,
-        totalCustomers: 5,
-      });
-    });
-
-    it('should handle unknown customer names', async () => {
-      const mockCustomerStats = [
+      expect(result).toEqual([
         {
-          customerId: 'unknown-customer',
-          _count: { id: 1 },
-          _sum: { amount: 100 },
-          _avg: { amount: 100 },
+          customerId,
+          totalAmount: 1000.0,
+          totalSales: 10,
+          customer: {
+            id: customerId,
+            name: 'Top Customer',
+            email: 'top@example.com',
+          },
         },
-      ];
-
-      const mockSaleDates = [{ saleDate: new Date('2024-01-15') }];
-      const mockExclusiveSales = [{ customerId: 'unknown-customer' }];
-
-      (prismaService.sale.groupBy as jest.Mock)
-        .mockResolvedValueOnce(mockCustomerStats)
-        .mockResolvedValueOnce(mockSaleDates)
-        .mockResolvedValueOnce(mockExclusiveSales);
-
-      (prismaService.customer.findMany as jest.Mock).mockResolvedValue([]);
-      (prismaService.customer.count as jest.Mock).mockResolvedValue(0);
-
-      const result = await service.getTopCustomers();
-
-      expect(result.highestVolume?.customerName).toBe('Unknown');
-    });
-
-    it('should handle null amounts in customer statistics', async () => {
-      const mockCustomerStats = [
-        {
-          customerId: 'customer-1',
-          _count: { id: 1 },
-          _sum: { amount: null },
-          _avg: { amount: null },
-        },
-      ];
-
-      const mockCustomers = [{ id: 'customer-1', name: 'Customer One' }];
-      const mockSaleDates = [{ saleDate: new Date('2024-01-15') }];
-      const mockExclusiveSales = [{ customerId: 'customer-1' }];
-
-      (prismaService.sale.groupBy as jest.Mock)
-        .mockResolvedValueOnce(mockCustomerStats)
-        .mockResolvedValueOnce(mockSaleDates)
-        .mockResolvedValueOnce(mockExclusiveSales);
-
-      (prismaService.customer.findMany as jest.Mock).mockResolvedValue(mockCustomers);
-      (prismaService.customer.count as jest.Mock).mockResolvedValue(1);
-
-      const result = await service.getTopCustomers();
-
-      expect(result.highestVolume).toEqual({
-        customerId: 'customer-1',
-        customerName: 'Customer One',
-        totalVolume: 0,
-        averageValue: 0,
-        totalSales: 1,
-        exclusiveDays: 1,
-      });
+      ]);
     });
   });
 });

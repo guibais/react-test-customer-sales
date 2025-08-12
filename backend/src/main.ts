@@ -17,3 +17,5 @@ export async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 9198);
 }
+
+bootstrap().catch(console.error);

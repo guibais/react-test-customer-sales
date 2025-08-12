@@ -15,10 +15,6 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const { login, isLoggingIn, loginError, isAuthenticated } = useAuth()
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" />
-  }
-
   const form = useForm({
     defaultValues: {
       email: '',
@@ -28,6 +24,10 @@ function LoginPage() {
       login(value)
     },
   })
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" />
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -69,6 +69,7 @@ function LoginPage() {
                       type="email"
                       placeholder="seu@email.com"
                       className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                      data-testid="email-input"
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>
@@ -98,6 +99,7 @@ function LoginPage() {
                       type="password"
                       placeholder="••••••••"
                       className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                      data-testid="password-input"
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>
@@ -119,6 +121,7 @@ function LoginPage() {
               type="submit"
               className="w-full"
               disabled={isLoggingIn}
+              data-testid="login-button"
             >
               {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar

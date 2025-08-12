@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../store/authStore";
 import { authService } from "../services/authService";
 import { useNavigate } from "@tanstack/react-router";
+import { translateError } from "../utils/errorTranslations";
 
 export const useAuth = () => {
   const { user, token, isAuthenticated, setAuth, clearAuth } = useAuthStore();
@@ -53,7 +54,7 @@ export const useAuth = () => {
     logout,
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
-    loginError: loginMutation.error,
-    registerError: registerMutation.error,
+    loginError: loginMutation.error ? { message: translateError(loginMutation.error) } : null,
+    registerError: registerMutation.error ? { message: translateError(registerMutation.error) } : null,
   };
 };

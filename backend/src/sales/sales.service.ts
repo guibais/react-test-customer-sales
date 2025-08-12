@@ -7,11 +7,12 @@ import { Sale, DailySalesStats, TopCustomersResponse } from '../types';
 export class SalesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(filters: SaleFiltersDto) {
+  async findAll(userId: string, filters: SaleFiltersDto) {
     const { customerId, page = 1, limit = 10 } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
+      customer: { userId },
       ...(customerId && { customerId }),
     };
 
@@ -48,9 +49,12 @@ export class SalesService {
     };
   }
 
-  async findOne(id: string): Promise<Sale> {
-    const sale = await this.prisma.sale.findUnique({
-      where: { id },
+  async findOne(userId: string, id: string): Promise<Sale> {
+    const sale = await this.prisma.sale.findFirst({
+      where: {
+        id,
+        customer: { userId },
+      },
       include: {
         customer: true,
       },
@@ -63,18 +67,34 @@ export class SalesService {
     return sale;
   }
 
-  async create(createSaleDto: CreateSaleDto): Promise<Sale> {
+  async create(userId: string, createSaleDto: CreateSaleDto): Promise<Sale> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: createSaleDto.customerId, userId },
+    });
+
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
     const data = {
       ...createSaleDto,
+      userId,
       saleDate: new Date(createSaleDto.saleDate),
     };
 
     return this.prisma.sale.create({ data });
   }
 
-  async update(id: string, updateSaleDto: UpdateSaleDto): Promise<Sale> {
-    const existingSale = await this.prisma.sale.findUnique({
-      where: { id },
+  async update(
+    userId: string,
+    id: string,
+    updateSaleDto: UpdateSaleDto,
+  ): Promise<Sale> {
+    const existingSale = await this.prisma.sale.findFirst({
+      where: {
+        id,
+        customer: { userId },
+      },
     });
 
     if (!existingSale) {
@@ -94,9 +114,12 @@ export class SalesService {
     });
   }
 
-  async remove(id: string): Promise<void> {
-    const existingSale = await this.prisma.sale.findUnique({
-      where: { id },
+  async remove(userId: string, id: string): Promise<void> {
+    const existingSale = await this.prisma.sale.findFirst({
+      where: {
+        id,
+        customer: { userId },
+      },
     });
 
     if (!existingSale) {
@@ -108,9 +131,12 @@ export class SalesService {
     });
   }
 
-  async getDailySalesStats(): Promise<DailySalesStats[]> {
+  async getDailySalesStats(userId: string): Promise<DailySalesStats[]> {
     const sales = await this.prisma.sale.groupBy({
       by: ['saleDate'],
+      where: {
+        customer: { userId },
+      },
       _count: {
         id: true,
       },
@@ -129,9 +155,12 @@ export class SalesService {
     }));
   }
 
-  async getTopCustomers(): Promise<TopCustomersResponse> {
+  async getTopCustomers(userId: string): Promise<TopCustomersResponse> {
     const customerStats = await this.prisma.sale.groupBy({
       by: ['customerId'],
+      where: {
+        customer: { userId },
+      },
       _count: {
         id: true,
       },
@@ -145,7 +174,10 @@ export class SalesService {
 
     const customerIds = customerStats.map((stat) => stat.customerId);
     const customers = await this.prisma.customer.findMany({
-      where: { id: { in: customerIds } },
+      where: {
+        id: { in: customerIds },
+        userId,
+      },
       select: { id: true, name: true },
     });
 
@@ -155,14 +187,20 @@ export class SalesService {
       customerStats.map(async (stat) => {
         const customerSaleDates = await this.prisma.sale.groupBy({
           by: ['saleDate'],
-          where: { customerId: stat.customerId },
+          where: {
+            customerId: stat.customerId,
+            customer: { userId },
+          },
         });
 
         let exclusiveDays = 0;
         for (const dateGroup of customerSaleDates) {
           const salesOnThisDate = await this.prisma.sale.groupBy({
             by: ['customerId'],
-            where: { saleDate: dateGroup.saleDate },
+            where: {
+              saleDate: dateGroup.saleDate,
+              customer: { userId },
+            },
           });
 
           if (salesOnThisDate.length === 1) {
@@ -181,7 +219,9 @@ export class SalesService {
       }),
     );
 
-    const totalCustomers = await this.prisma.customer.count();
+    const totalCustomers = await this.prisma.customer.count({
+      where: { userId },
+    });
 
     if (statsWithDetails.length === 0) {
       return {

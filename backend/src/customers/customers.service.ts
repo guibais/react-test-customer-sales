@@ -12,9 +12,10 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
+  async create(userId: string, createCustomerDto: CreateCustomerDto): Promise<Customer> {
     const data = {
       ...createCustomerDto,
+      userId,
       birthDate: createCustomerDto.birthDate
         ? new Date(createCustomerDto.birthDate)
         : undefined,
@@ -30,11 +31,12 @@ export class CustomersService {
     }
   }
 
-  async findAll(filters: CustomerFiltersDto) {
+  async findAll(userId: string, filters: CustomerFiltersDto) {
     const { name, email, page = 1, limit = 10 } = filters;
     const skip = (page - 1) * limit;
 
     const where = {
+      userId,
       ...(name && { name: { contains: name, mode: 'insensitive' as const } }),
       ...(email && {
         email: { contains: email, mode: 'insensitive' as const },
@@ -71,9 +73,9 @@ export class CustomersService {
     };
   }
 
-  async findOne(id: string): Promise<Customer> {
-    const customer = await this.prisma.customer.findUnique({
-      where: { id },
+  async findOne(userId: string, id: string): Promise<Customer> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id, userId },
     });
 
     if (!customer) {
@@ -84,10 +86,11 @@ export class CustomersService {
   }
 
   async update(
+    userId: string,
     id: string,
     updateCustomerDto: UpdateCustomerDto,
   ): Promise<Customer> {
-    await this.findOne(id);
+    await this.findOne(userId, id);
 
     const data = {
       ...updateCustomerDto,
@@ -109,8 +112,8 @@ export class CustomersService {
     }
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
+  async remove(userId: string, id: string): Promise<void> {
+    await this.findOne(userId, id);
 
     await this.prisma.customer.delete({
       where: { id },
