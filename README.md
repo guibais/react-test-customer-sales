@@ -1,6 +1,6 @@
 # 🧸 Toy Store Admin - Sistema de Gestão de Loja de Brinquedos
 
-![Demo do Sistema](./demo.gif)
+https://github.com/user-attachments/assets/70967d5f-ebeb-4838-805b-518ed819f5a7
 
 Sistema completo de gestão para loja de brinquedos desenvolvido como desafio técnico. Inclui API REST com autenticação, dashboard interativo e testes automatizados.
 
