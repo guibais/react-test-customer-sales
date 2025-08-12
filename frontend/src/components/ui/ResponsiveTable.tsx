@@ -30,7 +30,7 @@ type ResponsiveTableCellProps = {
 
 export function ResponsiveTable({ children, className = '', minWidth = '700px' }: ResponsiveTableProps) {
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-sky-200 shadow-lg overflow-hidden">
+    <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-sky-200 shadow-lg overflow-hidden" style={{ maxWidth: '95vw' }}>
       <div className="overflow-x-auto">
         <table 
           className={`w-full divide-y divide-sky-200 bg-white ${className}`}
