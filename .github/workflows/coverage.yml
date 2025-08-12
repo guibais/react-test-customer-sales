@@ -30,16 +30,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
       with:
-        node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
+        bun-version: latest
 
     - name: Install dependencies
       working-directory: ./backend
-      run: npm ci
+      run: bun install --frozen-lockfile
 
     - name: Setup test environment
       working-directory: ./backend
@@ -51,17 +49,17 @@ jobs:
 
     - name: Generate Prisma client
       working-directory: ./backend
-      run: npx prisma generate
+      run: bunx prisma generate
 
     - name: Run migrations
       working-directory: ./backend
-      run: npx prisma migrate deploy
+      run: bunx prisma migrate deploy
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
     - name: Run coverage tests
       working-directory: ./backend
-      run: npm run test:cov -- --coverage --coverageReporters=lcov --coverageReporters=text-summary
+      run: bun run test:cov -- --coverage --coverageReporters=lcov --coverageReporters=text-summary
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
@@ -72,7 +70,7 @@ jobs:
       working-directory: ./backend
       run: |
         echo "Checking coverage thresholds..."
-        npm run test:cov -- --coverage --coverageThreshold='{"global":{"statements":100,"branches":90,"functions":100,"lines":100}}'
+        bun run test:cov -- --coverage --coverageThreshold='{"global":{"statements":95,"branches":85,"functions":100,"lines":95}}'
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db

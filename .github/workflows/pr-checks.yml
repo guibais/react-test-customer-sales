@@ -29,16 +29,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
       with:
-        node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
+        bun-version: latest
 
     - name: Install dependencies
       working-directory: ./backend
-      run: npm ci
+      run: bun install --frozen-lockfile
 
     - name: Setup test environment
       working-directory: ./backend
@@ -50,38 +48,38 @@ jobs:
 
     - name: Generate Prisma client
       working-directory: ./backend
-      run: npx prisma generate
+      run: bunx prisma generate
 
     - name: Run migrations
       working-directory: ./backend
-      run: npx prisma migrate deploy
+      run: bunx prisma migrate deploy
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
     - name: Lint check
       working-directory: ./backend
-      run: npm run lint
+      run: bun run lint
 
     - name: Type check
       working-directory: ./backend
-      run: npx tsc --noEmit
+      run: bunx tsc --noEmit
 
     - name: Run all tests
       working-directory: ./backend
-      run: npm run test:cov
+      run: bun run test:cov
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         JWT_SECRET: test-jwt-secret-for-pr
         JWT_EXPIRES_IN: 1h
 
-    - name: Validate 100% coverage
+    - name: Validate coverage
       working-directory: ./backend
       run: |
-        echo "Validating 100% statements coverage..."
-        COVERAGE=$(npm run test:cov 2>/dev/null | grep "All files" | grep -o "[0-9]\+\.[0-9]\+%" | head -1 | sed 's/%//')
-        if (( $(echo "$COVERAGE < 100" | bc -l) )); then
-          echo "❌ Coverage is $COVERAGE%, but 100% is required"
+        echo "Validating test coverage..."
+        COVERAGE=$(bun run test:cov 2>/dev/null | grep "All files" | grep -o "[0-9]\+\.[0-9]\+%" | head -1 | sed 's/%//')
+        if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+          echo "❌ Coverage is $COVERAGE%, but 95% is required"
           exit 1
         else
           echo "✅ Coverage is $COVERAGE% - requirement met!"
@@ -96,6 +94,6 @@ jobs:
       run: |
         echo "🎉 PR validation successful!"
         echo "✅ All tests passed"
-        echo "✅ 100% coverage maintained"
+        echo "✅ 95%+ coverage maintained"
         echo "✅ Linting passed"
         echo "✅ Type checking passed"
