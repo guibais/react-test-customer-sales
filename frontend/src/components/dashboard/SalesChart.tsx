@@ -1,4 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { TrendingUp } from 'lucide-react'
 
 type SalesData = {
   date: string
@@ -38,7 +39,7 @@ export function SalesChart({ data }: SalesChartProps) {
       <div className="flex items-center justify-center h-64 text-slate-500">
         <div className="text-center">
           <div className="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <LineChart className="h-8 w-8 text-sky-400" />
+            <TrendingUp className="h-8 w-8 text-sky-400" />
           </div>
           <p className="font-medium">Nenhum dado disponível</p>
           <p className="text-sm">Dados aparecerão quando houver vendas</p>
